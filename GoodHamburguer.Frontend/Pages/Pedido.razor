@@ -36,6 +36,9 @@
                             <td class="text-danger">- R$ @pedido.ValorDesconto.ToString("F2")</td>
                             <td class="fw-bold text-success">R$ @pedido.Valortotal.ToString("F2")</td>
                             <td class="text-center">
+                                <button class="btn btn-sm btn-outline-info me-1" @onclick="() => AbrirModal(pedido)" title="Ver Detalhes">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                                 <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Editar(pedido)" title="Editar Pedido">
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
@@ -84,7 +87,7 @@
                             }
                         }
                     </select>
-                    <button class="btn btn-primary" @onclick="AdicionarAoCarrinho" title="Adicionar ao carrinho">
+                    <button type="button" class="btn btn-primary" @onclick="AdicionarAoCarrinho" title="Adicionar ao carrinho">
                         <i class="bi bi-plus-lg"></i> Adicionar
                     </button>
                 </div>
@@ -114,6 +117,43 @@
     </div>
 </div>
 
+@if (isView)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-receipt me-2"></i>Detalhes do Pedido</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModal"></button>
+                </div>
+                <div class="modal-body">
+                    @if (pedidoSelecionado != null)
+                    {
+                        <p class="text-muted" style="font-size: 0.85rem;"><strong>ID:</strong> @pedidoSelecionado.Id</p>
+                        <hr />
+                        <h6><strong>Itens Consumidos:</strong></h6>
+                        <ul class="list-group mb-3">
+                            @foreach (var item in pedidoSelecionado.NomeItens)
+                            {
+                                <li class="list-group-item py-1"><i class="bi bi-check2 text-success me-2"></i>@item</li>
+                            }
+                        </ul>
+
+                        <div class="bg-light p-3 rounded text-end">
+                            <p class="mb-1">Subtotal: R$ @pedidoSelecionado.SubTotal.ToString("F2")</p>
+                            <p class="mb-1 text-danger">Desconto: - R$ @pedidoSelecionado.ValorDesconto.ToString("F2")</p>
+                            <h4 class="mt-2 text-success fw-bold">Total: R$ @pedidoSelecionado.Valortotal.ToString("F2")</h4>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 
 @code {
     private List<ProdutoModel> produtos;
@@ -124,11 +164,13 @@
     private string produtoSelecionadoId = "";
     private List<ProdutoModel> cardapio;
     private Guid? pedidoEditandoId = null;
+    private bool isView = false;
+    private PedidoResponseModel pedidoSelecionado;
 
     protected override async Task OnInitializedAsync()
     {
         cardapio = await Http.GetFromJsonAsync<List<ProdutoModel>>("api/Cardapio");
-        CarregarPedidos();
+        await CarregarPedidos();
     }
 
     private async Task CarregarPedidos()
@@ -146,8 +188,6 @@
         {
             carrinhoIds.Add(id);
             produtoSelecionadoId = "";
-            SalvarPedido();
-
         }
     }
 
@@ -170,6 +210,19 @@
         }
     }
 
+    //Abrir Modal
+    private void AbrirModal(PedidoResponseModel pedido)
+    {
+        pedidoSelecionado = pedido;
+        isView = true;
+    }
+    //Fechar Modal
+    private void FecharModal()
+    {
+        isView = false;
+        pedidoSelecionado = null;
+    }
+
     //SAVE
     private async Task SalvarPedido()
     {
@@ -183,7 +236,7 @@
         }
         else
         {
-            response = await Http.PostAsJsonAsync($"api/Pedido/{pedidoEditandoId}", request);
+            response = await Http.PutAsJsonAsync($"api/Pedidos/{pedidoEditandoId}", request);
         }
         if (response.IsSuccessStatusCode)
         {
