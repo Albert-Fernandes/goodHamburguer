@@ -1,0 +1,233 @@
+﻿@page "/pedido"
+@using static System.Net.WebRequestMethods
+@using static GoodHamburguer.Frontend.Models.HamburgueriaModels
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<PageTitle>Gerenciar Pedidos</PageTitle>
+
+<div class="row">
+    <div class="col-md-7">
+        <h3><i class="bi bi-card-list me-2"></i>Histórico de Pedidos</h3>
+        <hr />
+
+        @if (pedidos == null)
+        {
+            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i> Nenhum pedido cadastrado ainda.</div>
+        }
+        else
+        {
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Itens</th>
+                        <th>Subtotal</th>
+                        <th>Desconto</th>
+                        <th>Total</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pedido in pedidos)
+                    {
+                        <tr>
+                            <td><small>@string.Join(", ", pedido.NomeItens)</small></td>
+                            <td>R$ @pedido.SubTotal.ToString("F2")</td>
+                            <td class="text-danger">- R$ @pedido.ValorDesconto.ToString("F2")</td>
+                            <td class="fw-bold text-success">R$ @pedido.Valortotal.ToString("F2")</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Editar(pedido)" title="Editar Pedido">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => Deletar(pedido.Id)" title="Excluir Pedido">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <strong>
+                    <i class="bi bi-cart3 me-2"></i>
+                    @(pedidoEditandoId == null ? "Novo Pedido" : "Editando Pedido")
+                </strong>
+                @if (pedidoEditandoId != null)
+                {
+                    <button class="btn btn-sm btn-danger" @onclick="CancelarEdicao">
+                        <i class="bi bi-x-octagon"></i> Cancelar
+                    </button>
+                }
+            </div>
+
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(mensagemErro))
+                {
+                    <div class="alert alert-danger p-2">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i><small>@mensagemErro</small>
+                    </div>
+                }
+
+                <div class="input-group mb-3">
+                    <select class="form-select" @bind="produtoSelecionadoId">
+                        <option value="">-- Escolha um lanche --</option>
+                        @if (cardapio != null)
+                        {
+                            @foreach (var p in cardapio)
+                            {
+                                <option value="@p.Id">@p.Nome (R$ @p.Preco.ToString("F2"))</option>
+                            }
+                        }
+                    </select>
+                    <button class="btn btn-primary" @onclick="AdicionarAoCarrinho" title="Adicionar ao carrinho">
+                        <i class="bi bi-plus-lg"></i> Adicionar
+                    </button>
+                </div>
+
+                <ul class="list-group mb-3">
+                    @foreach (var itemId in carrinhoIds)
+                    {
+                        var prod = cardapio?.FirstOrDefault(c => c.Id == itemId);
+                        if (prod != null)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-check2 me-2 text-success"></i> @prod.Nome</span>
+                                <button class="btn btn-sm btn-outline-danger border-0" @onclick="() => carrinhoIds.Remove(itemId)" title="Remover item">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </li>
+                        }
+                    }
+                </ul>
+
+                <button class="btn btn-success w-100 fw-bold" @onclick="SalvarPedido" disabled="@(!carrinhoIds.Any())">
+                    <i class="bi bi-check-circle me-1"></i>
+                    @(pedidoEditandoId == null ? "Finalizar Pedido" : "Salvar Alterações")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private List<ProdutoModel> produtos;
+    private List<Guid> carrinhoIds = new();
+    private PedidoResponseModel recibo;
+    private string mensagemErro;
+    private List<PedidoResponseModel> pedidos;
+    private string produtoSelecionadoId = "";
+    private List<ProdutoModel> cardapio;
+    private Guid? pedidoEditandoId = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cardapio = await Http.GetFromJsonAsync<List<ProdutoModel>>("api/Cardapio");
+        CarregarPedidos();
+    }
+
+    private async Task CarregarPedidos()
+    {
+        pedidos = await Http.GetFromJsonAsync<List<PedidoResponseModel>>("api/Pedidos");
+
+    }
+
+    private void AdicionarAoCarrinho()
+    {
+        mensagemErro = null;
+        recibo = null;
+
+        if (Guid.TryParse(produtoSelecionadoId, out Guid id) && id != Guid.Empty)
+        {
+            carrinhoIds.Add(id);
+            produtoSelecionadoId = "";
+            SalvarPedido();
+
+        }
+    }
+
+    private async Task FinalizarPedido()
+    {
+        mensagemErro = null;
+        var request = new CriarPedidoRequest { ProdutosIds = carrinhoIds };
+
+        var response = await Http.PostAsJsonAsync("api/Pedidos", request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            recibo = await response.Content.ReadFromJsonAsync<PedidoResponseModel>();
+            carrinhoIds.Clear();
+        }
+        else
+        {
+            var erro = await response.Content.ReadFromJsonAsync<ErroResponse>();
+            mensagemErro = erro?.Erro ?? "Erro desconhecido ao realizar pedido";
+        }
+    }
+
+    //SAVE
+    private async Task SalvarPedido()
+    {
+        mensagemErro = null;
+        var request = new CriarPedidoRequest { ProdutosIds = carrinhoIds };
+        HttpResponseMessage response;
+
+        if (pedidoEditandoId == null)
+        {
+            response = await Http.PostAsJsonAsync("api/Pedidos", request);
+        }
+        else
+        {
+            response = await Http.PostAsJsonAsync($"api/Pedido/{pedidoEditandoId}", request);
+        }
+        if (response.IsSuccessStatusCode)
+        {
+            CancelarEdicao();
+            await CarregarPedidos();
+        }
+        else
+        {
+            var erro = await response.Content.ReadFromJsonAsync<ErroResponse>();
+            mensagemErro = erro?.Erro ?? "Erro ao processar o pedido.";
+        }
+    }
+
+    //PUT
+    private async Task Editar(PedidoResponseModel pedido)
+    {
+        mensagemErro = null;
+        carrinhoIds.Clear();
+        pedidoEditandoId = pedido.Id;
+
+        foreach (var nome in pedido.NomeItens)
+        {
+            var prod = cardapio?.FirstOrDefault(cardapio => cardapio.Nome.Equals(nome));
+            if (prod != null)
+            {
+                carrinhoIds.Add(prod.Id);
+            }
+        }
+    }
+
+    //Delete
+    private async Task Deletar(Guid id)
+    {
+        var response = await Http.DeleteAsync($"api/Pedidos/{id}");
+        if (response.IsSuccessStatusCode)
+        {
+            await CarregarPedidos();
+        }
+    }
+
+    private void CancelarEdicao()
+    {
+        pedidoEditandoId = null;
+        carrinhoIds.Clear();
+        mensagemErro = null;
+    }
+}

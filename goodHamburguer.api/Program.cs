@@ -15,7 +15,19 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("GoodHamburguerDb"));
 builder.Services.AddScoped<IPedidoDescontoService, PedidoDescontoService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirBlazor", policy =>
+    {
+        policy.AllowAnyOrigin() 
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
+
+app.UseCors("PermitirBlazor");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "goodHamburguer.api", "goodH
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoodHamburguer.api.Test", "GoodHamburguer.api.Test\GoodHamburguer.api.Test.csproj", "{877A0633-74DD-49C5-A4F6-D81955B3025A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoodHamburguer.Frontend", "GoodHamburguer.Frontend\GoodHamburguer.Frontend.csproj", "{AB9787A3-3D2B-4B1C-9DB4-6D6A4096E8D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{877A0633-74DD-49C5-A4F6-D81955B3025A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{877A0633-74DD-49C5-A4F6-D81955B3025A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{877A0633-74DD-49C5-A4F6-D81955B3025A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB9787A3-3D2B-4B1C-9DB4-6D6A4096E8D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB9787A3-3D2B-4B1C-9DB4-6D6A4096E8D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB9787A3-3D2B-4B1C-9DB4-6D6A4096E8D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB9787A3-3D2B-4B1C-9DB4-6D6A4096E8D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

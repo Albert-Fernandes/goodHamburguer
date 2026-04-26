@@ -1,83 +1,33 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using goodHamburguer.api.Infrastructure.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace goodHamburguer.api.Controllers
 {
-    public class CardapioController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class CardapioController : ControllerBase
     {
-        // GET: CardapioController
+
+        private readonly AppDbContext _context;
+
+        public CardapioController(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> ObterCardapio()
+        {
+            var produtos = await _context.Produtos.ToListAsync();
+            return Ok(produtos);
+        }
         public ActionResult Index()
         {
-            return View();
+            return null;
         }
 
-        // GET: CardapioController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
 
-        // GET: CardapioController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: CardapioController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: CardapioController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: CardapioController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: CardapioController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: CardapioController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
     }
 }

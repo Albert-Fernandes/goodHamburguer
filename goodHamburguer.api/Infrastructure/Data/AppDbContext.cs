@@ -15,6 +15,9 @@ namespace goodHamburguer.api.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Pedido>()
+                .HasMany(p => p.Itens)
+                .WithMany();
         }
     }
 }

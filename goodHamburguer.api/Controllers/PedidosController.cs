@@ -72,7 +72,7 @@ namespace goodHamburguer.api.Controllers
         }
 
 
-        [HttpPut]
+        [HttpPut("{id}")]
         public async Task<IActionResult>Put(Guid id, [FromBody] CriarPedidoDto dto)
         {
             try
@@ -103,13 +103,14 @@ namespace goodHamburguer.api.Controllers
             }
         }
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var pedido = await _context.Pedidos.FindAsync(id);
             if (pedido == null) return NotFound(new { Erro = "Pedido não encontrado" });
 
             _context.Pedidos.Remove(pedido);
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
